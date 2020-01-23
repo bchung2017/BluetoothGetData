@@ -117,7 +117,8 @@ class FindDevicesScreen extends StatelessWidget {
                       result: r,
                       onTap: () => Navigator.of(context)
                           .push(MaterialPageRoute(builder: (context) {
-                        r.device.connect();
+                            r.device.connect();
+                            r.device.discoverServices();
                         return DeviceScreen(device: r.device);
                       })),
                     ),
@@ -152,6 +153,7 @@ class FindDevicesScreen extends StatelessWidget {
 }
 
 class DeviceScreen extends StatelessWidget {
+
   const DeviceScreen({Key key, this.device}) : super(key: key);
 
   final BluetoothDevice device;
@@ -198,6 +200,7 @@ class DeviceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    device.discoverServices();
     return Scaffold(
       appBar: AppBar(
         title: Text(device.name),
@@ -214,7 +217,8 @@ class DeviceScreen extends StatelessWidget {
                   text = 'DISCONNECT';
                   break;
                 case BluetoothDeviceState.disconnected:
-                  onPressed = () => device.connect();
+                  //onPressed = () => getBluetoothData();
+                  //onPressed = () => device.discoverServices();
                   text = 'CONNECT';
                   break;
                 default:
@@ -248,43 +252,47 @@ class DeviceScreen extends StatelessWidget {
                 title: Text(
                     'Device is ${snapshot.data.toString().split('.')[1]}.'),
                 subtitle: Text('${device.id}'),
-                trailing: StreamBuilder<bool>(
-                  stream: device.isDiscoveringServices,
-                  initialData: false,
-                  builder: (c, snapshot) => IndexedStack(
-                    index: snapshot.data ? 1 : 0,
-                    children: <Widget>[
-                      IconButton(
-                        icon: Icon(Icons.refresh),
-                        onPressed: () => device.discoverServices(),
-                      ),
-                      IconButton(
-                        icon: SizedBox(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation(Colors.grey),
-                          ),
-                          width: 18.0,
-                          height: 18.0,
-                        ),
-                        onPressed: null,
-                      )
-                    ],
-                  ),
-                ),
+//                trailing: StreamBuilder<bool>(
+//                  stream: device.isDiscoveringServices,
+//                  initialData: false,
+//                  builder: (c, snapshot) => IndexedStack(
+//                    index: snapshot.data ? 1 : 0,
+//                    children: <Widget>[
+//                      FlatButton(
+//                        //onPressed: () => device.discoverServices(),
+//                        color: Colors.green,
+//                        child: Text(
+//                          "Search for services",
+//                        ),
+//                      ),
+//                      IconButton(
+//                        icon: SizedBox(
+//                          child: CircularProgressIndicator(
+//                            valueColor: AlwaysStoppedAnimation(Colors.grey),
+//                          ),
+//                          width: 18.0,
+//                          height: 18.0,
+//                        ),
+//                        //onPressed: () => device.discoverServices(),
+//                        onPressed: null,
+//                      ),
+//                    ],
+//                  ),
+//                ),
               ),
             ),
-            StreamBuilder<int>(
-              stream: device.mtu,
-              initialData: 0,
-              builder: (c, snapshot) => ListTile(
-                title: Text('MTU Size'),
-                subtitle: Text('${snapshot.data} bytes'),
-                trailing: IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () => device.requestMtu(223),
-                ),
-              ),
-            ),
+//            StreamBuilder<int>(
+//              stream: device.mtu,
+//              initialData: 0,
+//              builder: (c, snapshot) => ListTile(
+//                title: Text('MTU Size'),
+//                subtitle: Text('${snapshot.data} bytes'),
+//                trailing: IconButton(
+//                  icon: Icon(Icons.edit),
+//                  onPressed: () => device.requestMtu(223),
+//                ),
+//              ),
+//            ),
             StreamBuilder<List<BluetoothService>>(
               stream: device.services,
               initialData: [],

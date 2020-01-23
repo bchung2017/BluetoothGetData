@@ -131,6 +131,7 @@ class ServiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     if (characteristicTiles.length > 0 && service.uuid.toString().toUpperCase().substring(4, 8)=="0001") {
       return ExpansionTile(
+        initiallyExpanded: true,
         title: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,6 +170,7 @@ class CharacteristicTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //characteristic.setNotifyValue(true);
     return StreamBuilder<List<int>>(
       stream: characteristic.value,
       initialData: characteristic.lastValue,
@@ -178,16 +180,16 @@ class CharacteristicTile extends StatelessWidget {
         double x = 0;
         double y = 0;
         double z = 0;
-        if (value.length > 0) {
-          x = ((snapshot.data[0] + snapshot.data[1] * 256) /
-              65535) * 360;
-          y = ((snapshot.data[2] + snapshot.data[3] * 256) /
-              65535) * 360;
-          z = ((snapshot.data[4] + snapshot.data[5] * 256) /
-              65535) * 360;
-        }
           //ADDRESS OF SPECIFIC BLUETOOTH DEVICE
           if (characteristic.uuid.toString().toUpperCase().substring(4, 8) == "0003" && value.length > 0) {
+
+            x = ((snapshot.data[0] + snapshot.data[1] * 256) /
+                65535) * 360;
+            y = ((snapshot.data[2] + snapshot.data[3] * 256) /
+                65535) * 360;
+            z = ((snapshot.data[4] + snapshot.data[5] * 256) /
+                65535) * 360;
+
             return Column(
                 children: <Widget>[DataTable(
                     columns: [
@@ -197,21 +199,25 @@ class CharacteristicTile extends StatelessWidget {
                     rows: [
                       DataRow(cells: [
                         DataCell(Text('Service')),
-                        DataCell(Text(value.toString())),
+                        DataCell(Text(value.toString().substring(0,value.toString().indexOf('.'))+value.toString().substring(value.toString().indexOf('.'),value.toString().indexOf('.')+2))),
                       ]),
                       DataRow(cells: [
                         DataCell(Text('X-Axis')),
-                        DataCell(Text(x.toString())),
+                        DataCell(Text(x.toString().substring(0,x.toString().indexOf('.'))+x.toString().substring(x.toString().indexOf('.'),x.toString().indexOf('.')+2))),
                       ]),
                       DataRow(cells: [
                         DataCell(Text('Y-Axis')),
-                        DataCell(Text(y.toString())),
+                        DataCell(Text(y.toString().substring(0,y.toString().indexOf('.'))+y.toString().substring(y.toString().indexOf('.'),y.toString().indexOf('.')+2))),
                       ]),
                       DataRow(cells: [
                         DataCell(Text('Z-Axis')),
-                        DataCell(Text(z.toString())),
+                        DataCell(Text(z.toString().substring(0,z.toString().indexOf('.'))+z.toString().substring(z.toString().indexOf('.'),z.toString().indexOf('.')+2))),
                       ])
                     ]
+                )
+                ]
+            );
+          }
 //          ), IconButton(
 //                icon: Icon(
 //                    characteristic.isNotifying
@@ -223,10 +229,7 @@ class CharacteristicTile extends StatelessWidget {
 //                        .color
 //                        .withOpacity(0.5)),
 //                onPressed: onNotificationPressed,
-                )
-                ]
-            );
-          }
+
 //          return ExpansionTile(
 //            title: ListTile(
 //              title: Column(
@@ -294,29 +297,68 @@ class CharacteristicTile extends StatelessWidget {
 //          );
 
 
-
-
-          else
-            return Row (
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>
-                [Text('Characteristic', textAlign: TextAlign.center),
-
-                  Expanded(
-                      child: IconButton(
-                        alignment: Alignment.centerLeft,
-                        icon: Icon(
-                            characteristic.isNotifying
-                                ? Icons.sync_disabled
-                                : Icons.sync,
-                            color: Theme
-                                .of(context)
-                                .iconTheme
-                                .color
-                                .withOpacity(0.5)),
-                        onPressed: onNotificationPressed,
-                      ))]
+        else {
+          if (characteristic.uuid.toString().toUpperCase().substring(4, 8) ==
+              "0003") {
+            return Column(
+                children: [
+//                  ListTile(
+//                      title: Text(
+//                          'Sync Data', textAlign: TextAlign.center),
+//                      trailing: IconButton(
+//                        alignment: Alignment.centerLeft,
+//                        icon: Icon(
+//                            characteristic.isNotifying
+//                                ? Icons.sync_disabled
+//                                : Icons.sync,
+//                            color: Theme
+//                                .of(context)
+//                                .iconTheme
+//                                .color
+//                                .withOpacity(0.5)),
+//                        onPressed: onNotificationPressed,
+//                      )
+//
+//                  )
+                  FlatButton(
+                    onPressed: onNotificationPressed,
+                    color: Colors.green,
+                    child: Text(
+                      "Sync Data",
+                    ),
+                  ),
+                  DataTable(
+                      columns: [
+                        DataColumn(label: Text('Bluetooth Feature')),
+                        DataColumn(label: Text('Data Value')),
+                      ],
+                      rows: [
+                        DataRow(cells: [
+                          DataCell(Text('Service')),
+                          DataCell(Text(value.toString())),
+                        ]),
+                        DataRow(cells: [
+                          DataCell(Text('X-Axis')),
+                          DataCell(Text(x.toString())),
+                        ]),
+                        DataRow(cells: [
+                          DataCell(Text('Y-Axis')),
+                          DataCell(Text(y.toString())),
+                        ]),
+                        DataRow(cells: [
+                          DataCell(Text('Z-Axis')),
+                          DataCell(Text(z.toString())),
+                        ])
+                      ]
+                  )
+                ]
             );
+          }
+          else
+            return
+              Container
+                ();
+        }
       },
     );
   }
