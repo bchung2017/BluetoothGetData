@@ -147,6 +147,7 @@ class ServiceTile extends StatelessWidget {
         children: characteristicTiles,
       );
     } else {
+      print("Searching for Characteristics, could not find 0x0001");
       return Container();
     }
   }
@@ -192,27 +193,53 @@ class CharacteristicTile extends StatelessWidget {
 
             return Column(
                 children: <Widget>[DataTable(
+                  dataRowHeight: 30,
                     columns: [
                       DataColumn(label: Text('Bluetooth Feature')),
                       DataColumn(label: Text('Data Value')),
                     ],
+                    //1/100 decimal place adjustment: x.toString().substring(0,x.toString().indexOf('.'))+x.toString().substring(x.toString().indexOf('.'),x.toString().indexOf('.')+2))
                     rows: [
                       DataRow(cells: [
                         DataCell(Text('Service')),
-                        DataCell(Text(value.toString().substring(0,value.toString().indexOf('.'))+value.toString().substring(value.toString().indexOf('.'),value.toString().indexOf('.')+2))),
+                        DataCell(Text(value.toString())),
                       ]),
                       DataRow(cells: [
                         DataCell(Text('X-Axis')),
-                        DataCell(Text(x.toString().substring(0,x.toString().indexOf('.'))+x.toString().substring(x.toString().indexOf('.'),x.toString().indexOf('.')+2))),
+                        DataCell(Text(x.toStringAsFixed(2))),
                       ]),
                       DataRow(cells: [
                         DataCell(Text('Y-Axis')),
-                        DataCell(Text(y.toString().substring(0,y.toString().indexOf('.'))+y.toString().substring(y.toString().indexOf('.'),y.toString().indexOf('.')+2))),
+                        DataCell(Text(y.toStringAsFixed(2))),
                       ]),
                       DataRow(cells: [
                         DataCell(Text('Z-Axis')),
-                        DataCell(Text(z.toString().substring(0,z.toString().indexOf('.'))+z.toString().substring(z.toString().indexOf('.'),z.toString().indexOf('.')+2))),
-                      ])
+                        DataCell(Text(z.toStringAsFixed(2))),
+                      ]),
+                      DataRow(cells: [
+                        DataCell(Text('X-Axis')),
+                        DataCell(Text(x.toStringAsFixed(2))),
+                      ]),
+                      DataRow(cells: [
+                        DataCell(Text('Y-Axis')),
+                        DataCell(Text(y.toStringAsFixed(2))),
+                      ]),
+                      DataRow(cells: [
+                        DataCell(Text('Z-Axis')),
+                        DataCell(Text(z.toStringAsFixed(2))),
+                      ]),
+                      DataRow(cells: [
+                        DataCell(Text('X-Axis')),
+                        DataCell(Text(x.toStringAsFixed(2))),
+                      ]),
+                      DataRow(cells: [
+                        DataCell(Text('Y-Axis')),
+                        DataCell(Text(y.toStringAsFixed(2))),
+                      ]),
+                      DataRow(cells: [
+                        DataCell(Text('Z-Axis')),
+                        DataCell(Text(z.toStringAsFixed(2))),
+                      ]),
                     ]
                 )
                 ]
@@ -327,30 +354,6 @@ class CharacteristicTile extends StatelessWidget {
                       "Sync Data",
                     ),
                   ),
-                  DataTable(
-                      columns: [
-                        DataColumn(label: Text('Bluetooth Feature')),
-                        DataColumn(label: Text('Data Value')),
-                      ],
-                      rows: [
-                        DataRow(cells: [
-                          DataCell(Text('Service')),
-                          DataCell(Text(value.toString())),
-                        ]),
-                        DataRow(cells: [
-                          DataCell(Text('X-Axis')),
-                          DataCell(Text(x.toString())),
-                        ]),
-                        DataRow(cells: [
-                          DataCell(Text('Y-Axis')),
-                          DataCell(Text(y.toString())),
-                        ]),
-                        DataRow(cells: [
-                          DataCell(Text('Z-Axis')),
-                          DataCell(Text(z.toString())),
-                        ])
-                      ]
-                  )
                 ]
             );
           }

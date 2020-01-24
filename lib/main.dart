@@ -65,6 +65,30 @@ class BluetoothOffScreen extends StatelessWidget {
 }
 
 class FindDevicesScreen extends StatelessWidget {
+
+  void re_connectToDevice(BuildContext context, BluetoothDevice device) {
+    device.discoverServices();
+    //device.connect();
+    print("Device state is:" + device.state.toString());
+
+    Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (context) =>
+                DeviceScreen(device: device)));
+
+  }
+
+  void connectToDevice(BuildContext context, ScanResult result) {
+    //result.device.discoverServices();
+    //result.device.connect();
+    print("Device state is:" + result.device.state.toString());
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) {
+      return DeviceScreen(device: result.device);
+    }));
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,10 +118,7 @@ class FindDevicesScreen extends StatelessWidget {
                             BluetoothDeviceState.connected) {
                           return RaisedButton(
                             child: Text('OPEN'),
-                            onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        DeviceScreen(device: d))),
+                            onPressed: () => re_connectToDevice(context, d),
                           );
                         }
                         return Text(snapshot.data.toString());
@@ -115,12 +136,7 @@ class FindDevicesScreen extends StatelessWidget {
                       .map(
                         (r) => ScanResultTile(
                       result: r,
-                      onTap: () => Navigator.of(context)
-                          .push(MaterialPageRoute(builder: (context) {
-                            r.device.connect();
-                            r.device.discoverServices();
-                        return DeviceScreen(device: r.device);
-                      })),
+                      onTap: () => connectToDevice(context, r),
                     ),
                   )
                       .toList(),
@@ -157,6 +173,18 @@ class DeviceScreen extends StatelessWidget {
   const DeviceScreen({Key key, this.device}) : super(key: key);
 
   final BluetoothDevice device;
+
+
+  void bluetoothConnect() {
+    device.discoverServices();
+    device.connect();
+  }
+
+  void callBackTest() {
+    device.disconnect();
+    print("press detected 1");
+    print("press detected 2");
+  }
 
   List<int> _getRandomBytes() {
     final math = Random();
@@ -200,7 +228,7 @@ class DeviceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    device.discoverServices();
+    //device.discoverServices();
     return Scaffold(
       appBar: AppBar(
         title: Text(device.name),
@@ -213,13 +241,14 @@ class DeviceScreen extends StatelessWidget {
               String text;
               switch (snapshot.data) {
                 case BluetoothDeviceState.connected:
+                  //onPressed = () => callBackTest();
                   onPressed = () => device.disconnect();
                   text = 'DISCONNECT';
                   break;
                 case BluetoothDeviceState.disconnected:
                   //onPressed = () => getBluetoothData();
-                  //onPressed = () => device.discoverServices();
-                  text = 'CONNECT';
+                  onPressed = () => device.connect();                  //onPressed = () => bluetoothConnect();
+                  text = 'CONNECTADO';
                   break;
                 default:
                   onPressed = null;
@@ -293,15 +322,24 @@ class DeviceScreen extends StatelessWidget {
 //                ),
 //              ),
 //            ),
+
+//          DATA DISPLAYING TABLE
             StreamBuilder<List<BluetoothService>>(
               stream: device.services,
               initialData: [],
               builder: (c, snapshot) {
-                return Column(
-                  children: _buildServiceTiles(snapshot.data),
-                );
+                if(snapshot.data == null) {
+                  print("Empty ServiceTile Container was created, no services detected");
+                  return Container();
+                }
+                else {
+                  return Column(
+                    children: _buildServiceTiles(snapshot.data),
+                  );
+                }
               },
             ),
+
           ],
         ),
       ),
