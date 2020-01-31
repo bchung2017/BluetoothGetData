@@ -153,12 +153,22 @@ class ServiceTile extends StatelessWidget {
   }
 }
 
+List<List<double>> data = new List();
+double x;
+
 class CharacteristicTile extends StatelessWidget {
   final BluetoothCharacteristic characteristic;
   final List<DescriptorTile> descriptorTiles;
   final VoidCallback onReadPressed;
   final VoidCallback onWritePressed;
   final VoidCallback onNotificationPressed;
+
+  //Parameters for reading data
+  final sensorNumber = 8; //The number of sensors within each packet, assuming each sensor uses two array elements, or 2 bytes of data
+  final rowLength = 4;    //The length of each row in the table to be displayed
+  final dataBuffer = 3;   //The number of elements to skip at the beginning of each packet of data (usually contains info like packet length and packet number, but no actual sensor data)
+  final packetNumber = 2;
+
 
   const CharacteristicTile(
       {Key key,
@@ -177,176 +187,66 @@ class CharacteristicTile extends StatelessWidget {
       initialData: characteristic.lastValue,
       builder: (c, snapshot) {
         //Get the data, calculate raw values for each axis and map to degrees
-        final value = snapshot.data;
-        double x = 0;
-        double y = 0;
-        double z = 0;
-          //ADDRESS OF SPECIFIC BLUETOOTH DEVICE
-          if (characteristic.uuid.toString().toUpperCase().substring(4, 8) == "0003" && value.length > 0) {
+        final sensorData = snapshot.data;
 
-            x = ((snapshot.data[0] + snapshot.data[1] * 256) /
-                65535) * 360;
-            y = ((snapshot.data[2] + snapshot.data[3] * 256) /
-                65535) * 360;
-            z = ((snapshot.data[4] + snapshot.data[5] * 256) /
-                65535) * 360;
+          if (characteristic.uuid.toString().toUpperCase().substring(4, 8) == "0003" && sensorData.length > 0) {
+            if (sensorData[1] == packetNumber) {
 
-            return Column(
-                children: <Widget>[DataTable(
-                  dataRowHeight: 30,
-                    columns: [
-                      DataColumn(label: Text('Bluetooth Feature')),
-                      DataColumn(label: Text('Data Value')),
-                    ],
-                    //1/100 decimal place adjustment: x.toString().substring(0,x.toString().indexOf('.'))+x.toString().substring(x.toString().indexOf('.'),x.toString().indexOf('.')+2))
-                    rows: [
-                      DataRow(cells: [
-                        DataCell(Text('Service')),
-                        DataCell(Text(value.toString())),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('X-Axis')),
-                        DataCell(Text(x.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('Y-Axis')),
-                        DataCell(Text(y.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('Z-Axis')),
-                        DataCell(Text(z.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('X-Axis')),
-                        DataCell(Text(x.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('Y-Axis')),
-                        DataCell(Text(y.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('Z-Axis')),
-                        DataCell(Text(z.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('X-Axis')),
-                        DataCell(Text(x.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('Y-Axis')),
-                        DataCell(Text(y.toStringAsFixed(2))),
-                      ]),
-                      DataRow(cells: [
-                        DataCell(Text('Z-Axis')),
-                        DataCell(Text(z.toStringAsFixed(2))),
-                      ]),
-                    ]
-                )
-                ]
-            );
+              //Clear data array and re-populate it with new stream
+              data.clear();
+              for (int i = 0; i < (sensorNumber/rowLength); i++) {
+                List<double> rowData = new List.filled(rowLength, 0, growable: false);
+                for (int h = 0; h < rowLength; h++) {
+                  //First get the beginning index of each row with sensorDataIndex
+                  //Then calculate the temeperature values using formula: (x1*256 + x2)*0.00390625
+
+                  int largeByteIndex = dataBuffer+i*sensorNumber+2*h;
+                  int smallByteIndex = largeByteIndex+1;
+                  if(smallByteIndex > sensorData.length-1)
+                    break;
+                  int largeByte = sensorData[largeByteIndex];
+                  int smallByte = sensorData[smallByteIndex];
+
+                  rowData[h] = (largeByte*256 + smallByte)*0.00390625;
+                }
+                data.add(rowData);
+              }
+
+              //Add values to formatted array with Row labels
+            }
+
+            //30 rows needed
+            return
+                    Column(
+                        children:
+                        <Widget>[DataTable(
+                          dataRowHeight: 50,
+                          headingRowHeight: 50,
+                          columns: [
+                            DataColumn(label: Text('1')),
+                            DataColumn(label: Text('2')),
+                            DataColumn(label: Text('3')),
+                            DataColumn(label: Text('4')),
+                          ],
+                          rows: data.map((rowData) =>
+                              DataRow(
+                                cells:
+                                rowData.map((values) =>
+                                    DataCell(Text(values.toStringAsFixed(2))),
+                                ).toList(),
+                              )
+                          ).toList(),
+                        )
+                        ]
+                    );
           }
-//          ), IconButton(
-//                icon: Icon(
-//                    characteristic.isNotifying
-//                        ? Icons.sync_disabled
-//                        : Icons.sync,
-//                    color: Theme
-//                        .of(context)
-//                        .iconTheme
-//                        .color
-//                        .withOpacity(0.5)),
-//                onPressed: onNotificationPressed,
-
-//          return ExpansionTile(
-//            title: ListTile(
-//              title: Column(
-//                mainAxisAlignment: MainAxisAlignment.center,
-//                crossAxisAlignment: CrossAxisAlignment.start,
-//                children: <Widget>[
-//                  Text('Characteristic'),
-//                  Text(
-//                      '0x${characteristic.uuid.toString()
-//                          .toUpperCase()
-//                          .substring(4, 8)}',
-//                      style: Theme
-//                          .of(context)
-//                          .textTheme
-//                          .body1
-//                          .copyWith(
-//                          color: Theme
-//                              .of(context)
-//                              .textTheme
-//                              .caption
-//                              .color))
-//                ],
-//              ),
-//              subtitle: Text(value.toString()),
-//              contentPadding: EdgeInsets.all(0.0),
-//            ),
-//            trailing: Row(
-//              mainAxisSize: MainAxisSize.min,
-//              children: <Widget>[
-//                IconButton(
-//                  icon: Icon(
-//                    Icons.file_download,
-//                    color: Theme
-//                        .of(context)
-//                        .iconTheme
-//                        .color
-//                        .withOpacity(0.5),
-//                  ),
-//                  onPressed: onReadPressed,
-//                ),
-//                IconButton(
-//                  icon: Icon(Icons.file_upload,
-//                      color: Theme
-//                          .of(context)
-//                          .iconTheme
-//                          .color
-//                          .withOpacity(0.5)),
-//                  onPressed: onWritePressed,
-//                ),
-//                IconButton(
-//                  icon: Icon(
-//                      characteristic.isNotifying
-//                          ? Icons.sync_disabled
-//                          : Icons.sync,
-//                      color: Theme
-//                          .of(context)
-//                          .iconTheme
-//                          .color
-//                          .withOpacity(0.5)),
-//                  onPressed: onNotificationPressed,
-//                )
-//              ],
-//            ),
-//            children: descriptorTiles,
-//          );
 
 
-        else {
+          else {
           if (characteristic.uuid.toString().toUpperCase().substring(4, 8) ==
               "0003") {
             return Column(
                 children: [
-//                  ListTile(
-//                      title: Text(
-//                          'Sync Data', textAlign: TextAlign.center),
-//                      trailing: IconButton(
-//                        alignment: Alignment.centerLeft,
-//                        icon: Icon(
-//                            characteristic.isNotifying
-//                                ? Icons.sync_disabled
-//                                : Icons.sync,
-//                            color: Theme
-//                                .of(context)
-//                                .iconTheme
-//                                .color
-//                                .withOpacity(0.5)),
-//                        onPressed: onNotificationPressed,
-//                      )
-//
-//                  )
                   FlatButton(
                     onPressed: onNotificationPressed,
                     color: Colors.green,
