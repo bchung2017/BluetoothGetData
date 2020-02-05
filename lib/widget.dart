@@ -153,8 +153,8 @@ class ServiceTile extends StatelessWidget {
   }
 }
 
-List<List<num>> data = new List();
-int rowNumber = 0;
+List<List<double>> data = new List();
+double x;
 
 class CharacteristicTile extends StatelessWidget {
   final BluetoothCharacteristic characteristic;
@@ -165,10 +165,9 @@ class CharacteristicTile extends StatelessWidget {
 
   //Parameters for reading data
   final sensorNumber = 8; //The number of sensors within each packet, assuming each sensor uses two array elements, or 2 bytes of data
-  final rowLength = 7;    //The length of each row in the table to be displayed
+  final rowLength = 4;    //The length of each row in the table to be displayed
   final dataBuffer = 3;   //The number of elements to skip at the beginning of each packet of data (usually contains info like packet length and packet number, but no actual sensor data)
   final packetNumber = 2;
-  final dataByteSize = 2;
 
 
   const CharacteristicTile(
@@ -189,109 +188,176 @@ class CharacteristicTile extends StatelessWidget {
       builder: (c, snapshot) {
         //Get the data, calculate raw values for each axis and map to degrees
         final sensorData = snapshot.data;
-        int largeByteIndex;
-        int smallByteIndex;
-        int largeByte;
-        int smallByte;
-        List<double>formattedData = new List();
 
           if (characteristic.uuid.toString().toUpperCase().substring(4, 8) == "0003" && sensorData.length > 0) {
-
-
-            //Format raw data into values
-            for(int i = dataBuffer; i < sensorData.length-1; i += dataByteSize) {
-              largeByteIndex =  i;
-              smallByteIndex = largeByteIndex+1;
-              largeByte = sensorData[largeByteIndex];
-              smallByte = sensorData[smallByteIndex];
-              formattedData.add((largeByte*256 + smallByte)*0.00390625);
-            }
-
-            //Load formatted data into formatted List
-            for (int i = 0; i < (sensorNumber/rowLength); i++) {
-              List<num> rowData = new List.filled(rowLength-1, 0, growable: false);
-              rowData[0] = rowNumber++;
-              for (int h = 1; h < rowLength-1; h++) {
-                if(formattedData.isNotEmpty) {
-                  rowData[h] = formattedData.first;
-                  formattedData.removeAt(0);
-                }
-                else
-                  rowData[h] = 0;
-              }
-              data.add(rowData);
-            }
-
             if (sensorData[1] == packetNumber) {
+
+              //Clear data array and re-populate it with new stream
               data.clear();
-              rowNumber=0;
+              for (int i = 0; i < (sensorNumber/rowLength); i++) {
+                List<double> rowData = new List.filled(rowLength, 0, growable: false);
+                for (int h = 0; h < rowLength; h++) {
+                  //First get the beginning index of each row with sensorDataIndex
+                  //Then calculate the temeperature values using formula: (x1*256 + x2)*0.00390625
+
+                  int largeByteIndex = dataBuffer+i*sensorNumber+2*h;
+                  int smallByteIndex = largeByteIndex+1;
+                  if(smallByteIndex > sensorData.length-1)
+                    break;
+                  int largeByte = sensorData[largeByteIndex];
+                  int smallByte = sensorData[smallByteIndex];
+
+                  rowData[h] = (largeByte*256 + smallByte)*0.00390625;
+                }
+                data.add(rowData);
+              }
+
+              //Add values to formatted array with Row labels
             }
 
-            //Clear data array and re-populate it with new stream
-//            if (sensorData[1] == packetNumber) {
-//              data.clear();
-//              rowNumber = 0;
-//              return
-//                Column(
-//                    children:
-//                    <Widget>[DataTable(
-//                      dataRowHeight: 50,
-//                      columnSpacing: 20,
-//                      columns: [
-//                        DataColumn(label: Text('')),
-//                        DataColumn(label: Text('1')),
-//                        DataColumn(label: Text('2')),
-//                        DataColumn(label: Text('3')),
-//                        DataColumn(label: Text('4')),
-//                        DataColumn(label: Text('5')),
-//                        DataColumn(label: Text('6')),
-//                      ],
-//                      rows: data.map((rowData) =>
-//                          DataRow(
-//                            cells:
-//                            rowData.map((values) =>
-//                                DataCell(Text(values.toStringAsFixed(2))),
-//                            ).toList(),
-//                          )
-//                      ).toList(),
-//                    )
-//                    ]
-//                );
-//
-//            }
+            int i = 0;
+            List<double> values = new List();
+            for(i = 0; i < 36; i+=2) {
+              values.add((sensorData[i]*256 + sensorData[i+1])*0.00390625);
+            }
 
-//            else
-              return
-                  Container();
-//                Column(
-//                    children:
-//                    <Widget>[DataTable(
-//                      dataRowHeight: 50,
-//                      columnSpacing: 20,
-//                      columns: [
-//                        DataColumn(label: Text('')),
-//                        DataColumn(label: Text('1')),
-//                        DataColumn(label: Text('2')),
-//                        DataColumn(label: Text('3')),
-//                        DataColumn(label: Text('4')),
-//                        DataColumn(label: Text('5')),
-//                        DataColumn(label: Text('6')),
-//                      ],
-//                      rows: data.map((rowData) =>
-//                          DataRow(
-//                            cells:
-//                            rowData.map((values) =>
-//                                DataCell(Text(values.toStringAsFixed(2))),
-//                            ).toList(),
-//                          )
-//                      ).toList(),
-//                    )
-//                    ]
-//                );
+            for(; i < 45; i +=2) {
+              values.add(0.0+(sensorData[i]*256 + sensorData[i+1]));
+            }
+
+            for(; i < 51; i +=2) {
+              values.add(0.0+(sensorData[i]*256 + sensorData[i+1]));
+            }
+
+            values.add(0.0+(sensorData[52]*256 + sensorData[53]));
 
 
             //30 rows needed
-
+            return
+                    Column(
+                        children:
+                        <Widget>[DataTable(
+                          dataRowHeight: 50,
+                          headingRowHeight: 50,
+                          columns: [
+                            DataColumn(label: Text('1')),
+                            DataColumn(label: Text('2')),
+                            DataColumn(label: Text('3')),
+                            DataColumn(label: Text('4')),
+                          ],
+                          rows: [
+                            DataRow(
+                                cells: [
+                                  DataCell(Text('Temperature')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            //TEMPERATURE
+                            DataRow(
+                              cells: [
+                                DataCell(Text(values[0].toStringAsFixed(2))),
+                                DataCell(Text(values[1].toStringAsFixed(2))),
+                                DataCell(Text(values[2].toStringAsFixed(2))),
+                                DataCell(Text(values[3].toStringAsFixed(2))),
+                              ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[4].toStringAsFixed(2))),
+                                  DataCell(Text(values[5].toStringAsFixed(2))),
+                                  DataCell(Text(values[6].toStringAsFixed(2))),
+                                  DataCell(Text(values[7].toStringAsFixed(2))),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[8].toStringAsFixed(2))),
+                                  DataCell(Text(values[9].toStringAsFixed(2))),
+                                  DataCell(Text(values[10].toStringAsFixed(2))),
+                                  DataCell(Text(values[11].toStringAsFixed(2))),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[12].toStringAsFixed(2))),
+                                  DataCell(Text(values[13].toStringAsFixed(2))),
+                                  DataCell(Text(values[14].toStringAsFixed(2))),
+                                  DataCell(Text(values[15].toStringAsFixed(2))),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[16].toStringAsFixed(2))),
+                                  DataCell(Text(values[17].toStringAsFixed(2))),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text('Pressure')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            //PRESSURE
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[18].toStringAsFixed(2))),
+                                  DataCell(Text(values[19].toStringAsFixed(2))),
+                                  DataCell(Text(values[20].toStringAsFixed(2))),
+                                  DataCell(Text(values[21].toStringAsFixed(2))),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[22].toStringAsFixed(2))),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text('IMU')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            //IMU
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[23].toStringAsFixed(2))),
+                                  DataCell(Text(values[24].toStringAsFixed(2))),
+                                  DataCell(Text(values[25].toStringAsFixed(2))),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text('Battery')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            //BATTERY
+                            DataRow(
+                                cells: [
+                                  DataCell(Text(values[26].toStringAsFixed(2))),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                          ]
+                        )
+                        ]
+                    );
           }
 
 
@@ -312,7 +378,8 @@ class CharacteristicTile extends StatelessWidget {
           }
           else
             return
-              Container();
+              Container
+                ();
         }
       },
     );
