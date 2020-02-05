@@ -65,6 +65,30 @@ class BluetoothOffScreen extends StatelessWidget {
 }
 
 class FindDevicesScreen extends StatelessWidget {
+
+  void re_connectToDevice(BuildContext context, BluetoothDevice device) {
+    device.discoverServices();
+    //device.connect();
+    print("Device state is:" + device.state.toString());
+
+    Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (context) =>
+                DeviceScreen(device: device)));
+
+  }
+
+  void connectToDevice(BuildContext context, ScanResult result) {
+    //result.device.discoverServices();
+    //result.device.connect();
+    print("Device state is:" + result.device.state.toString());
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) {
+      return DeviceScreen(device: result.device);
+    }));
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,10 +118,7 @@ class FindDevicesScreen extends StatelessWidget {
                             BluetoothDeviceState.connected) {
                           return RaisedButton(
                             child: Text('OPEN'),
-                            onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        DeviceScreen(device: d))),
+                            onPressed: () => re_connectToDevice(context, d),
                           );
                         }
                         return Text(snapshot.data.toString());
@@ -115,11 +136,7 @@ class FindDevicesScreen extends StatelessWidget {
                       .map(
                         (r) => ScanResultTile(
                       result: r,
-                      onTap: () => Navigator.of(context)
-                          .push(MaterialPageRoute(builder: (context) {
-                        r.device.connect();
-                        return DeviceScreen(device: r.device);
-                      })),
+                      onTap: () => connectToDevice(context, r),
                     ),
                   )
                       .toList(),
@@ -152,9 +169,22 @@ class FindDevicesScreen extends StatelessWidget {
 }
 
 class DeviceScreen extends StatelessWidget {
+
   const DeviceScreen({Key key, this.device}) : super(key: key);
 
   final BluetoothDevice device;
+
+
+  void bluetoothConnect() {
+    device.discoverServices();
+    device.connect();
+  }
+
+  void callBackTest() {
+    device.disconnect();
+    print("press detected 1");
+    print("press detected 2");
+  }
 
   List<int> _getRandomBytes() {
     final math = Random();
@@ -198,6 +228,7 @@ class DeviceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //device.discoverServices();
     return Scaffold(
       appBar: AppBar(
         title: Text(device.name),
@@ -210,12 +241,14 @@ class DeviceScreen extends StatelessWidget {
               String text;
               switch (snapshot.data) {
                 case BluetoothDeviceState.connected:
+                  //onPressed = () => callBackTest();
                   onPressed = () => device.disconnect();
                   text = 'DISCONNECT';
                   break;
                 case BluetoothDeviceState.disconnected:
-                  onPressed = () => device.connect();
-                  text = 'CONNECT';
+                  //onPressed = () => getBluetoothData();
+                  onPressed = () => device.connect();                  //onPressed = () => bluetoothConnect();
+                  text = 'CONNECTADO';
                   break;
                 default:
                   onPressed = null;
@@ -248,52 +281,65 @@ class DeviceScreen extends StatelessWidget {
                 title: Text(
                     'Device is ${snapshot.data.toString().split('.')[1]}.'),
                 subtitle: Text('${device.id}'),
-                trailing: StreamBuilder<bool>(
-                  stream: device.isDiscoveringServices,
-                  initialData: false,
-                  builder: (c, snapshot) => IndexedStack(
-                    index: snapshot.data ? 1 : 0,
-                    children: <Widget>[
-                      IconButton(
-                        icon: Icon(Icons.refresh),
-                        onPressed: () => device.discoverServices(),
-                      ),
-                      IconButton(
-                        icon: SizedBox(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation(Colors.grey),
-                          ),
-                          width: 18.0,
-                          height: 18.0,
-                        ),
-                        onPressed: null,
-                      )
-                    ],
-                  ),
-                ),
+//                trailing: StreamBuilder<bool>(
+//                  stream: device.isDiscoveringServices,
+//                  initialData: false,
+//                  builder: (c, snapshot) => IndexedStack(
+//                    index: snapshot.data ? 1 : 0,
+//                    children: <Widget>[
+//                      FlatButton(
+//                        //onPressed: () => device.discoverServices(),
+//                        color: Colors.green,
+//                        child: Text(
+//                          "Search for services",
+//                        ),
+//                      ),
+//                      IconButton(
+//                        icon: SizedBox(
+//                          child: CircularProgressIndicator(
+//                            valueColor: AlwaysStoppedAnimation(Colors.grey),
+//                          ),
+//                          width: 18.0,
+//                          height: 18.0,
+//                        ),
+//                        //onPressed: () => device.discoverServices(),
+//                        onPressed: null,
+//                      ),
+//                    ],
+//                  ),
+//                ),
               ),
             ),
-            StreamBuilder<int>(
-              stream: device.mtu,
-              initialData: 0,
-              builder: (c, snapshot) => ListTile(
-                title: Text('MTU Size'),
-                subtitle: Text('${snapshot.data} bytes'),
-                trailing: IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () => device.requestMtu(223),
-                ),
-              ),
-            ),
+//            StreamBuilder<int>(
+//              stream: device.mtu,
+//              initialData: 0,
+//              builder: (c, snapshot) => ListTile(
+//                title: Text('MTU Size'),
+//                subtitle: Text('${snapshot.data} bytes'),
+//                trailing: IconButton(
+//                  icon: Icon(Icons.edit),
+//                  onPressed: () => device.requestMtu(223),
+//                ),
+//              ),
+//            ),
+
+//          DATA DISPLAYING TABLE
             StreamBuilder<List<BluetoothService>>(
               stream: device.services,
               initialData: [],
               builder: (c, snapshot) {
-                return Column(
-                  children: _buildServiceTiles(snapshot.data),
-                );
+                if(snapshot.data == null) {
+                  print("Empty ServiceTile Container was created, no services detected");
+                  return Container();
+                }
+                else {
+                  return Column(
+                    children: _buildServiceTiles(snapshot.data),
+                  );
+                }
               },
             ),
+
           ],
         ),
       ),
