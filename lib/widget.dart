@@ -231,6 +231,8 @@ class CharacteristicTile extends StatelessWidget {
 
             values.add(0.0+(sensorData[52]*256 + sensorData[53]));
 
+            values.add(0.0+(sensorData[54]*256 + sensorData[55]));
+
 
             //30 rows needed
             return
@@ -306,15 +308,15 @@ class CharacteristicTile extends StatelessWidget {
                             //PRESSURE
                             DataRow(
                                 cells: [
-                                  DataCell(Text(values[18].toStringAsFixed(2))),
-                                  DataCell(Text(values[19].toStringAsFixed(2))),
-                                  DataCell(Text(values[20].toStringAsFixed(2))),
-                                  DataCell(Text(values[21].toStringAsFixed(2))),
+                                  DataCell(Text((values[18]*85/4095).toStringAsFixed(2))),
+                                  DataCell(Text((values[19]*85/4095).toStringAsFixed(2))),
+                                  DataCell(Text((values[20]*85/4095).toStringAsFixed(2))),
+                                  DataCell(Text((values[21]*85/4095).toStringAsFixed(2))),
                                 ]
                             ),
                             DataRow(
                                 cells: [
-                                  DataCell(Text(values[22].toStringAsFixed(2))),
+                                  DataCell(Text((values[22]*85/4095).toStringAsFixed(2))),
                                   DataCell(Text('')),
                                   DataCell(Text('')),
                                   DataCell(Text('')),
@@ -348,10 +350,28 @@ class CharacteristicTile extends StatelessWidget {
                             //BATTERY
                             DataRow(
                                 cells: [
-                                  DataCell(Text(values[26].toStringAsFixed(2))),
+                                  DataCell(Text((values[26]/1880*3.3).toStringAsFixed(2))),
                                   DataCell(Text('')),
                                   DataCell(Text('')),
                                   DataCell(Text('')),
+                                ]
+                            ),
+                            DataRow(
+                                cells: [
+                                  DataCell(Text('Steps')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                ]
+                            ),
+                            //BATTERY
+                            DataRow(
+                                cells: [
+                                  DataCell(Text((values[27]).toStringAsFixed(2))),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  DataCell(Text('')),
+                                  //DataCell(Text('')),
                                 ]
                             ),
                           ]
