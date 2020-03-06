@@ -218,15 +218,15 @@ class CharacteristicTile extends StatelessWidget {
 
             int i = 0;
             List<double> values = new List();
-            for(i = 0; i < 36; i+=2) {
+            for(i = 8; i < 44; i+=2) {
               values.add((sensorData[i]*256 + sensorData[i+1])*0.00390625);
             }
 
-            for(; i < 45; i +=2) {
+            for(; i < 53; i +=2) {
               values.add(0.0+(sensorData[i]*256 + sensorData[i+1]));
             }
 
-            for(; i < 51; i +=2) {
+            for(; i < 59; i +=2) {
               values.add(0.0+(sensorData[i]*256 + sensorData[i+1]));
             }
 
@@ -260,40 +260,40 @@ class CharacteristicTile extends StatelessWidget {
                             //TEMPERATURE
                             DataRow(
                               cells: [
-                                DataCell(Text(values[0].toStringAsFixed(2))),
-                                DataCell(Text(values[1].toStringAsFixed(2))),
-                                DataCell(Text(values[2].toStringAsFixed(2))),
-                                DataCell(Text(values[3].toStringAsFixed(2))),
+                                  DataCell(Text(values[4].toStringAsFixed(2))), //T0
+                                  DataCell(Text(values[5].toStringAsFixed(2))), //T1
+                                  DataCell(Text(values[3].toStringAsFixed(2))), //T2
+                                  DataCell(Text(values[2].toStringAsFixed(2))), //T3
                               ]
                             ),
                             DataRow(
                                 cells: [
-                                  DataCell(Text(values[4].toStringAsFixed(2))),
-                                  DataCell(Text(values[5].toStringAsFixed(2))),
-                                  DataCell(Text(values[6].toStringAsFixed(2))),
-                                  DataCell(Text(values[7].toStringAsFixed(2))),
+                                  DataCell(Text(values[1].toStringAsFixed(2))), //T4
+                                  DataCell(Text(values[0].toStringAsFixed(2))), //T5
+                                  DataCell(Text(values[10].toStringAsFixed(2))),//T6
+                                  DataCell(Text(values[9].toStringAsFixed(2))), //T7
                                 ]
                             ),
                             DataRow(
                                 cells: [
-                                  DataCell(Text(values[8].toStringAsFixed(2))),
-                                  DataCell(Text(values[9].toStringAsFixed(2))),
-                                  DataCell(Text(values[10].toStringAsFixed(2))),
-                                  DataCell(Text(values[11].toStringAsFixed(2))),
+                                  DataCell(Text(values[8].toStringAsFixed(2))), //T8
+                                  DataCell(Text(values[7].toStringAsFixed(2))), //T9
+                                  DataCell(Text(values[6].toStringAsFixed(2))), //T10
+                                  DataCell(Text(values[11].toStringAsFixed(2))),//T11
                                 ]
                             ),
                             DataRow(
                                 cells: [
-                                  DataCell(Text(values[12].toStringAsFixed(2))),
-                                  DataCell(Text(values[13].toStringAsFixed(2))),
-                                  DataCell(Text(values[14].toStringAsFixed(2))),
-                                  DataCell(Text(values[15].toStringAsFixed(2))),
+                                  DataCell(Text(values[12].toStringAsFixed(2))),//T12
+                                  DataCell(Text(values[13].toStringAsFixed(2))),//T13
+                                  DataCell(Text(values[16].toStringAsFixed(2))),//T14
+                                  DataCell(Text(values[15].toStringAsFixed(2))),//T15
                                 ]
                             ),
                             DataRow(
                                 cells: [
-                                  DataCell(Text(values[16].toStringAsFixed(2))),
-                                  DataCell(Text(values[17].toStringAsFixed(2))),
+                                  DataCell(Text(values[17].toStringAsFixed(2))),//T16
+                                  DataCell(Text(values[14].toStringAsFixed(2))),//T17
                                   DataCell(Text('')),
                                   DataCell(Text('')),
                                 ]
@@ -309,15 +309,15 @@ class CharacteristicTile extends StatelessWidget {
                             //PRESSURE
                             DataRow(
                                 cells: [
-                                  DataCell(Text((values[18]*85/4095).toStringAsFixed(2))),
+                                  DataCell(Text(pressureCalibration(values[18]).toStringAsFixed(2))),
                                   DataCell(Text(pressureCalibration(values[19]).toStringAsFixed(2))),
-                                  DataCell(Text((values[20]*85/4095).toStringAsFixed(2))),
-                                  DataCell(Text((values[21]*85/4095).toStringAsFixed(2))),
+                                  DataCell(Text(pressureCalibration(values[20]).toStringAsFixed(2))),
+                                  DataCell(Text(pressureCalibration(values[21]).toStringAsFixed(2))),
                                 ]
                             ),
                             DataRow(
                                 cells: [
-                                  DataCell(Text((values[22]*85/4095).toStringAsFixed(2))),
+                                  DataCell(Text(pressureCalibration(values[21]).toStringAsFixed(2))),
                                   DataCell(Text('')),
                                   DataCell(Text('')),
                                   DataCell(Text('')),
@@ -408,7 +408,14 @@ class CharacteristicTile extends StatelessWidget {
 }
 
 pressureCalibration(double value) {
-  return 4.2988*pow(e, 0.0348*value*85/4095);
+  //EXPONENTIAL EQUATION
+  //return 4.2988*pow(e, 0.0348*value*85/4095);
+  //return value*85/4095*1.0633+20;
+  double calibratedValue = (value-962.13)/51.384;
+  if (calibratedValue < 0)
+    return 0;
+  else
+    return calibratedValue;
 }
 
 class DescriptorTile extends StatelessWidget {
