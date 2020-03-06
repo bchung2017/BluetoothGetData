@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'dart:math';
 
 class ScanResultTile extends StatelessWidget {
   const ScanResultTile({Key key, this.result, this.onTap}) : super(key: key);
@@ -309,7 +310,7 @@ class CharacteristicTile extends StatelessWidget {
                             DataRow(
                                 cells: [
                                   DataCell(Text((values[18]*85/4095).toStringAsFixed(2))),
-                                  DataCell(Text((values[19]*85/4095).toStringAsFixed(2))),
+                                  DataCell(Text(pressureCalibration(values[19]).toStringAsFixed(2))),
                                   DataCell(Text((values[20]*85/4095).toStringAsFixed(2))),
                                   DataCell(Text((values[21]*85/4095).toStringAsFixed(2))),
                                 ]
@@ -404,6 +405,10 @@ class CharacteristicTile extends StatelessWidget {
       },
     );
   }
+}
+
+pressureCalibration(double value) {
+  return 4.2988*pow(e, 0.0348*value*85/4095);
 }
 
 class DescriptorTile extends StatelessWidget {
